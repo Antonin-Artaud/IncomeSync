@@ -1,0 +1,13 @@
+﻿services:
+  incomesync.api:
+    image: incomesync.api
+    build:
+      context: .
+      dockerfile: src/IncomeSync.Api/Dockerfile
+  incomesync.sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - SA_PASSWORD=Pass@word
+      - ACCEPT_EULA=Y
+    ports:
+      - "1433:1433"
