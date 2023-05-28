@@ -1,5 +1,8 @@
 using System.Globalization;
+using System.Security.Claims;
+using System.Text;
 using FluentValidation;
+using IncomeSync.Api.Middlewares.JwtTokenMiddleware;
 using IncomeSync.Api.Middlewares.UserExceptionMiddleware;
 using IncomeSync.Api.Middlewares.ValidationMiddleware;
 using IncomeSync.Api.Validations;
@@ -8,14 +11,16 @@ using IncomeSync.Core.Services.UserService;
 using IncomeSync.Persistence;
 using IncomeSync.Persistence.Repositories.UserRepository;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace IncomeSync.Api;
 
 internal static class Program
 {
-    private static IConfigurationRoot _configurationRoot =
-        new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+    private static readonly IConfigurationRoot ConfigurationRoot = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
     
     public static void Main(string[] args)
     {
@@ -32,13 +37,13 @@ internal static class Program
             app.UseSwaggerUI();
         }
         
+        app.UseMiddleware<JwtTokenMiddleware>();
         app.UseMiddleware<ValidationExceptionMiddleware>();
         app.UseMiddleware<UserExceptionMiddleware>();
         app.UseHttpsRedirection();
 
         app.UseAuthentication();
         app.UseAuthorization();
-
         app.MapControllers();
 
         app.Run();
@@ -46,6 +51,29 @@ internal static class Program
 
     private static void AddServices(WebApplicationBuilder builder)
     {
+        builder.Services.AddAuthentication(_ =>
+            {
+                _.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                _.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                _.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = ConfigurationRoot["JwtSettings:Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = ConfigurationRoot["JwtSettings:Audience"],
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ConfigurationRoot["JwtSettings:PrivateKey"]!)),
+                    ValidateLifetime = true,
+                    RequireExpirationTime = true,
+                    RequireSignedTokens = true,
+                    ClockSkew = TimeSpan.FromMinutes(5)
+                };
+            });
+        
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
@@ -63,7 +91,7 @@ internal static class Program
     private static void AddDbContext(WebApplicationBuilder builder)
     { 
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(_configurationRoot.GetConnectionString("DefaultConnection"),
+            options.UseSqlServer(ConfigurationRoot.GetConnectionString("DefaultConnection"),
                 optionsBuilder => optionsBuilder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.GetName().Name)));
     }
 }

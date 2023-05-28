@@ -13,6 +13,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5FFF3216-13BC-4B81-A02A-B6FAB7659092}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
+		ecdsa_private.pem = ecdsa_private.pem
+		ecdsa_public.pem = ecdsa_public.pem
 	EndProjectSection
 EndProject
 Global

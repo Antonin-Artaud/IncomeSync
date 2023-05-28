@@ -7,6 +7,6 @@ public interface IUserRepository
 {
     Task<UserResponse> InsertUserAsync(CreateUserRequest createUserRequest);
     Task<UserResponse?> FindUserByIdAsync(Guid id);
-    Task<UserResponse?> FindUserByMailAsync(string mail);
+    Task<UserResponse?> FindUserByMailAsync(string email);
     Task<UserDeleteResponse> DeleteUserByAsync(CreateUserRequest createUserRequest);
 }

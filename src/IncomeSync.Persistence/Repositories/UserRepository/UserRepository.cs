@@ -49,9 +49,9 @@ public class UserRepository : IUserRepository
         };
     }
 
-    public async Task<UserResponse?> FindUserByMailAsync(string mail)
+    public async Task<UserResponse?> FindUserByMailAsync(string email)
     {
-        var userFound = await _ctx.Users.FirstOrDefaultAsync(_ => _.Email == mail);
+        var userFound = await _ctx.Users.FirstOrDefaultAsync(_ => _.Email == email);
 
         if (userFound is null)
         {

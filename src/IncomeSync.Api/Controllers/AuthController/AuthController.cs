@@ -1,8 +1,11 @@
-﻿using MediatR;
+﻿using IncomeSync.Core.Shared.Contracts.Requests.TokenRequest;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IncomeSync.Api.Controllers.AuthController;
 
+[AllowAnonymous]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
@@ -13,10 +16,12 @@ public class AuthController : ControllerBase
         _mediator = mediator;
     }
     
+    [AllowAnonymous]
     [HttpPost]
-    public async Task<IActionResult> LogIn()
+    public async Task<IActionResult> LogIn(CreateTokenRequest request)
     {
-        return Ok();
+        var token = await _mediator.Send(request);
+        return Ok(token);
     }
     
 }
