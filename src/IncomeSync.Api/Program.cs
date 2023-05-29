@@ -2,10 +2,12 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Text;
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using IncomeSync.Api.Middlewares.JwtTokenMiddleware;
 using IncomeSync.Api.Middlewares.UserExceptionMiddleware;
 using IncomeSync.Api.Middlewares.ValidationMiddleware;
 using IncomeSync.Api.Validations;
+using IncomeSync.Api.Validations.UserValidation;
 using IncomeSync.Core;
 using IncomeSync.Core.Services.UserService;
 using IncomeSync.Persistence;
@@ -14,13 +16,15 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 
 namespace IncomeSync.Api;
 
 internal static class Program
 {
-    private static readonly IConfigurationRoot ConfigurationRoot = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+    private static readonly IConfigurationRoot ConfigurationRoot = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        .AddEnvironmentVariables()
+        .Build();
     
     public static void Main(string[] args)
     {
@@ -37,8 +41,8 @@ internal static class Program
             app.UseSwaggerUI();
         }
         
-        app.UseMiddleware<JwtTokenMiddleware>();
         app.UseMiddleware<ValidationExceptionMiddleware>();
+        app.UseMiddleware<JwtTokenMiddleware>();
         app.UseMiddleware<UserExceptionMiddleware>();
         app.UseHttpsRedirection();
 
@@ -75,6 +79,7 @@ internal static class Program
             });
         
         builder.Services.AddControllers();
+        builder.Services.AddValidatorsFromAssemblies(new[] { typeof(Program).Assembly });
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddMediatR(_ => _.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));

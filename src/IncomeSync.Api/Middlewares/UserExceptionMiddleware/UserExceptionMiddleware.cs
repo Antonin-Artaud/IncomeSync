@@ -19,7 +19,7 @@ public class UserExceptionMiddleware
         {
             await _request(ctx);
         }
-        catch (Exception exception)
+        catch (UserException exception)
         {
             ctx.Response.StatusCode = exception switch
             {
@@ -28,9 +28,12 @@ public class UserExceptionMiddleware
                 _ => StatusCodes.Status500InternalServerError
             };
             
-            var validationFailureResponse = new UserExceptionResponse
+            var validationFailureResponse = new UserFailureResponse
             {
-                ErrorMessage = exception.Message
+                Errors = new []
+                {
+                    exception.Message
+                }
             };
 
             await ctx.Response.WriteAsJsonAsync(validationFailureResponse);

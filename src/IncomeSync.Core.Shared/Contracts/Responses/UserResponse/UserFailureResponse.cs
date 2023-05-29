@@ -2,8 +2,8 @@
 
 namespace IncomeSync.Core.Shared.Contracts.Responses.UserResponse;
 
-public readonly struct UserExceptionResponse
+public readonly struct UserFailureResponse
 {
     [Required(DisallowAllDefaultValues = true)]
-    public string ErrorMessage { get; init; }
+    public IEnumerable<string> Errors { get; init; }
 }

@@ -4,7 +4,7 @@ using MediatR;
 
 namespace IncomeSync.Core.Shared.Contracts.Requests.UserRequest;
 
-public struct GetUserRequest : IRequest<UserResponse?>
+public readonly struct GetUserRequest : IRequest<UserResponse?>
 {
     [Required(DisallowAllDefaultValues = true)]
     public Guid Id { get; init; }

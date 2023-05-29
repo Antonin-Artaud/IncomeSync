@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IncomeSync.Api.Controllers.AuthController;
 
-[AllowAnonymous]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
@@ -23,5 +22,4 @@ public class AuthController : ControllerBase
         var token = await _mediator.Send(request);
         return Ok(token);
     }
-    
 }
