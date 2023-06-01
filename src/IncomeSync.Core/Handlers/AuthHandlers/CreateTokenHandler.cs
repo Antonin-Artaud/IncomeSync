@@ -12,20 +12,26 @@ namespace IncomeSync.Core.Handlers.TokenHandler;
 public class CreateTokenHandler : IRequestHandler<CreateTokenRequest, TokenResponse>
 {
     private readonly IConfiguration _configuration;
+    private readonly IMediator _mediator;
 
-    public CreateTokenHandler(IConfiguration configuration)
+    private const string IssuerKey = "JwtSettings:Issuer";
+    private const string AudienceKey = "JwtSettings:Audience";
+    private const string PrivateKeyFilePathKey = "JwtSettings:PrivateKeyFilePath";
+
+    public CreateTokenHandler(IConfiguration configuration, IMediator mediator)
     {
         _configuration = configuration;
+        _mediator = mediator;
     }
 
-    public Task<TokenResponse> Handle(CreateTokenRequest request, CancellationToken cancellationToken)
+    public async Task<TokenResponse> Handle(CreateTokenRequest request, CancellationToken cancellationToken)
     {
-        var issuer = _configuration["JwtSettings:Issuer"] ?? throw new NullReferenceException("Unable de read Issuer property");
-        var audience = _configuration["JwtSettings:Audience"] ?? throw new NullReferenceException("Unable de read Audience property");
-        var key = _configuration["JwtSettings:PrivateKey"] ?? throw new NullReferenceException("Unable de read PrivateKey property");
-        var privateKeyBytes = Convert.FromBase64String(key);
+        var issuer = GetConfigurationValue(IssuerKey);
+        var audience = GetConfigurationValue(AudienceKey);
+        var privateKey = await ReadFileAsync(GetConfigurationValue(PrivateKeyFilePathKey));
+
         var ecdsa = ECDsa.Create();
-        ecdsa.ImportPkcs8PrivateKey(privateKeyBytes, out _);
+        ecdsa.ImportFromPem(privateKey);
         var signingCredentials = new SigningCredentials(new ECDsaSecurityKey(ecdsa), SecurityAlgorithms.EcdsaSha512);
 
         var subject = new ClaimsIdentity(new[]
@@ -41,6 +47,7 @@ public class CreateTokenHandler : IRequestHandler<CreateTokenRequest, TokenRespo
             Subject = subject,
             Expires = expires,
             Issuer = issuer,
+            IssuedAt = DateTime.UtcNow,
             Audience = audience,
             SigningCredentials = signingCredentials
         };
@@ -49,9 +56,27 @@ public class CreateTokenHandler : IRequestHandler<CreateTokenRequest, TokenRespo
         var token = tokenHandler.CreateToken(tokenDescriptor);
         var jwtToken = tokenHandler.WriteToken(token);
 
-        return Task.FromResult(new TokenResponse
+        return new TokenResponse
         {
             Token = jwtToken
-        });
+        };
+    }
+
+    private string GetConfigurationValue(string key)
+    {
+        return _configuration[key] ?? throw new NullReferenceException($"Unable de read {key} property");
+    }
+
+    private static async Task<string> ReadFileAsync(string path)
+    {
+        try
+        {
+            using var reader = File.OpenText(path);
+            return await reader.ReadToEndAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to read file at path: {path}", ex);
+        }
     }
 }
