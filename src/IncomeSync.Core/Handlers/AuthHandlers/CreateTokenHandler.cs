@@ -36,8 +36,8 @@ public class CreateTokenHandler : IRequestHandler<CreateTokenRequest, TokenRespo
 
         var subject = new ClaimsIdentity(new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sid, "teste"),
-            new Claim(JwtRegisteredClaimNames.Email, request.Email)
+            new Claim(JwtRegisteredClaimNames.Sid, request.User.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, request.User.Email)
         });
 
         var expires = DateTime.UtcNow.AddDays(1);

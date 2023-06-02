@@ -8,9 +8,11 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
 {
     public ApplicationDbContext CreateDbContext(string[] args)
     {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        var appSettingsPath = Path.Combine(currentDirectory, "..", "IncomeSync.Api", "appsettings.json");
+
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(@"D:\IncomeSync\src\IncomeSync.Api")
-            .AddJsonFile("appsettings.json")
+            .AddJsonFile(appSettingsPath)
             .Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();

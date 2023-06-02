@@ -1,10 +1,12 @@
 using IncomeSync.Core.Shared.Contracts.Requests.UserRequest;
+using IncomeSync.Core.Shared.Contracts.Responses.UserResponse;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IncomeSync.Api.Controllers.UserController;
 
+[Authorize]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
@@ -15,15 +17,14 @@ public class UserController : ControllerBase
         _mediator = mediator;
     }
     
-    [AllowAnonymous]
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> CreateUser(CreateUserRequest createUserRequest)
     {
         var userResponse = await _mediator.Send(createUserRequest);
         return CreatedAtAction(nameof(CreateUser), userResponse);
     }
     
-    [AllowAnonymous]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetUser(Guid id)
     {

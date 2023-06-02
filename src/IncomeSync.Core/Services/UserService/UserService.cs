@@ -21,7 +21,7 @@ public class UserService : IUserService
         
         if (user is not null)
         {
-            throw new UserAlreadyExistException("This email is already assigned to an user.");
+            throw new UserBaseAlreadyExistException("This email is already assigned to an user.");
         }
         
         return await _userRepository.InsertUserAsync(createUserRequest);
@@ -33,10 +33,15 @@ public class UserService : IUserService
         
         if (user is not null)
         {
-            throw new UserAlreadyExistException("This email is already assigned to an user.");
+            throw new UserBaseAlreadyExistException("This email is already assigned to an user.");
         }
 
         return user;
+    }
+
+    public async Task<UserResponse?> GetUserByEmailAsync(string email)
+    {
+        return await _userRepository.FindUserByMailAsync(email);
     }
 
     public Task<UserDeleteResponse> DeleteUserByAsync(CreateUserRequest createUserRequest)

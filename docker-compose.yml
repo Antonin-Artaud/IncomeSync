@@ -5,9 +5,10 @@
       context: .
       dockerfile: src/IncomeSync.Api/Dockerfile
   incomesync.sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/azure-sql-edge
     environment:
-      - SA_PASSWORD=Pass@word
+      - MSSQL_USER=SA
+      - MSSQL_SA_PASSWORD=B332F501-948E-4D89-99C6-E8BAD8D63770
       - ACCEPT_EULA=Y
     ports:
       - "1433:1433"

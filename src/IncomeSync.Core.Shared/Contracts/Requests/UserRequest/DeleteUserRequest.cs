@@ -4,7 +4,7 @@ using MediatR;
 
 namespace IncomeSync.Core.Shared.Contracts.Requests.UserRequest;
 
-public readonly struct DeleteUserRequest : IRequest<UserDeleteResponse>
+public record DeleteUserRequest : IRequest<UserDeleteResponse>
 {
     [Required(DisallowAllDefaultValues = true)]
     public Guid Id { get; init; }

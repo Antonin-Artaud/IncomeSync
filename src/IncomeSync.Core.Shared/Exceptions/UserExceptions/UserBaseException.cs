@@ -1,17 +1,17 @@
 ﻿namespace IncomeSync.Core.Shared.Exceptions.UserExceptions;
 
 [Serializable]
-public class UserException : Exception
+public class UserBaseException : Exception
 {
-    protected UserException()
+    protected UserBaseException()
     {
     }
 
-    protected UserException(string? message) : base(message)
+    protected UserBaseException(string? message) : base(message)
     {
     }
 
-    protected UserException(string? message, Exception? innerException) : base(message, innerException)
+    protected UserBaseException(string? message, Exception? innerException) : base(message, innerException)
     {
     }
 }

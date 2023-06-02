@@ -1,13 +1,9 @@
-using System.Globalization;
-using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using FluentValidation;
-using FluentValidation.AspNetCore;
-using IncomeSync.Api.Middlewares.JwtTokenMiddleware;
 using IncomeSync.Api.Middlewares.UserExceptionMiddleware;
 using IncomeSync.Api.Middlewares.ValidationMiddleware;
 using IncomeSync.Api.Validations;
-using IncomeSync.Api.Validations.UserValidation;
 using IncomeSync.Core;
 using IncomeSync.Core.Services.UserService;
 using IncomeSync.Persistence;
@@ -16,6 +12,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace IncomeSync.Api;
 
@@ -29,7 +27,7 @@ internal static class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        
+
         AddServices(builder);
         AddDbContext(builder);
         
@@ -38,11 +36,16 @@ internal static class Program
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+
+                // Activer l'authentification par jeton JWT
+                c.DocExpansion(DocExpansion.None);
+            });
         }
         
         app.UseMiddleware<ValidationExceptionMiddleware>();
-        app.UseMiddleware<JwtTokenMiddleware>();
         app.UseMiddleware<UserExceptionMiddleware>();
         app.UseHttpsRedirection();
 
@@ -63,25 +66,51 @@ internal static class Program
             })
             .AddJwtBearer(options =>
             {
+                var publicKey = File.ReadAllText(ConfigurationRoot["JwtSettings:PublicKeyFilePath"] ?? throw new FileNotFoundException());
+                var ecdsa = ECDsa.Create();
+                ecdsa.ImportFromPem(publicKey);
+            
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new ECDsaSecurityKey(ecdsa),
                     ValidateIssuer = true,
                     ValidIssuer = ConfigurationRoot["JwtSettings:Issuer"],
                     ValidateAudience = true,
                     ValidAudience = ConfigurationRoot["JwtSettings:Audience"],
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ConfigurationRoot["JwtSettings:PrivateKey"]!)),
-                    ValidateLifetime = true,
-                    RequireExpirationTime = true,
-                    RequireSignedTokens = true,
-                    ClockSkew = TimeSpan.FromMinutes(5)
                 };
             });
         
         builder.Services.AddControllers();
         builder.Services.AddValidatorsFromAssemblies(new[] { typeof(Program).Assembly });
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Description = "JWT Authorization header using the Bearer scheme.",
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer"
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+        });
         builder.Services.AddMediatR(_ => _.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
         
         builder.Services.AddValidatorsFromAssembly(IncomeSyncCoreAsync.Value);

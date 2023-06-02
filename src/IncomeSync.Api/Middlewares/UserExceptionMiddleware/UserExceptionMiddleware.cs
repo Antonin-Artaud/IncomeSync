@@ -19,12 +19,12 @@ public class UserExceptionMiddleware
         {
             await _request(ctx);
         }
-        catch (UserException exception)
+        catch (UserBaseException exception)
         {
             ctx.Response.StatusCode = exception switch
             {
-                UserAlreadyExistException => StatusCodes.Status409Conflict,
-                UserNotFoundException => StatusCodes.Status404NotFound,
+                UserBaseAlreadyExistException => StatusCodes.Status409Conflict,
+                UserBaseNotFoundException => StatusCodes.Status404NotFound,
                 _ => StatusCodes.Status500InternalServerError
             };
             

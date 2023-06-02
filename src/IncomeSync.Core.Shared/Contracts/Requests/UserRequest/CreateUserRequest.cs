@@ -4,11 +4,11 @@ using MediatR;
 
 namespace IncomeSync.Core.Shared.Contracts.Requests.UserRequest;
 
-public readonly struct CreateUserRequest : IRequest<UserResponse>
+public record CreateUserRequest : IRequest<UserResponse>
 {
     [Required(DisallowAllDefaultValues = true)]
-    public string Email { get; init; }
-    
+    public string Email { get; init; } = null!;
+
     [Required(DisallowAllDefaultValues = true)]
-    public string Password { get; init; }
+    public string Password { get; init; } = null!;
 }
