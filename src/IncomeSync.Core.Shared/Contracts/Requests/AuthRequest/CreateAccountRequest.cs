@@ -4,7 +4,7 @@ using MediatR;
 
 namespace IncomeSync.Core.Shared.Contracts.Requests.AuthRequest;
 
-public class CreateAccountRequest : IRequest<TokenResponse>
+public class CreateAccountRequest : IRequest
 {
     [Required(DisallowAllDefaultValues = true)]
     public string Email { get; init; } = string.Empty;

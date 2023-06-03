@@ -1,11 +1,10 @@
 using IncomeSync.Core.Services.UserService;
 using IncomeSync.Core.Shared.Contracts.Requests.UserRequest;
-using IncomeSync.Core.Shared.Contracts.Responses.UserResponse;
 using MediatR;
 
-namespace IncomeSync.Core.Handlers.UserHandler;
+namespace IncomeSync.Core.Handlers.UserHandlers;
 
-public class CreateUserHandler : IRequestHandler<CreateUserRequest, UserResponse>
+public class CreateUserHandler : IRequestHandler<CreateUserRequest>
 {
     private readonly IUserService _userService;
 
@@ -14,8 +13,8 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, UserResponse
         _userService = userService;
     }
 
-    public async Task<UserResponse> Handle(CreateUserRequest request, CancellationToken cancellationToken)
+    public async Task Handle(CreateUserRequest request, CancellationToken cancellationToken)
     {
-        return await _userService.CreateUserAsync(request);
+        await _userService.CreateUserAsync(request);
     }
 }

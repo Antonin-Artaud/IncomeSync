@@ -3,7 +3,7 @@ using IncomeSync.Core.Shared.Contracts.Requests.UserRequest;
 using IncomeSync.Core.Shared.Contracts.Responses.UserResponse;
 using MediatR;
 
-namespace IncomeSync.Core.Handlers.UserHandler;
+namespace IncomeSync.Core.Handlers.UserHandlers;
 
 public class GetUserHandler : IRequestHandler<GetUserRequest, UserResponse?>
 {

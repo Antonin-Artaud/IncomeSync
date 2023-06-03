@@ -3,6 +3,6 @@
 public class UserEntity
 {
     public Guid Id { get; init; }
-    public string Email { get; init; }
-    public string PasswordHash { get; set; }
+    public string Email { get; init; } = default!;
+    public string PasswordHash { get; set; } = default!;
 }

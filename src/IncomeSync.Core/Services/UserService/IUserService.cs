@@ -11,9 +11,10 @@ public interface IUserService
     /// </summary>
     /// <param name="createUserRequest"><see cref="CreateUserRequest"/></param>
     /// <returns><see cref="UserResponse"/></returns>
-    /// <exception cref="UserBaseAlreadyExistException"><see cref="UserBaseAlreadyExistException"/></exception>
-    Task<UserResponse> CreateUserAsync(CreateUserRequest createUserRequest);
+    /// <exception cref="UserAlreadyExistException"><see cref="UserAlreadyExistException"/></exception>
+    Task CreateUserAsync(CreateUserRequest createUserRequest);
     Task<UserResponse?> GetUserByIdAsync(Guid createUserRequest);
     Task<UserResponse?> GetUserByEmailAsync(string email);
+    Task<UserResponse?> GetUserByCredentialsAsync(string email, string password);
     Task<UserDeleteResponse> DeleteUserByAsync(CreateUserRequest createUserRequest);
 }

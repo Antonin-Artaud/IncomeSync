@@ -1,8 +1,6 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿namespace IncomeSync.Core.Shared.Contracts.Responses.TokenResponse;
 
-namespace IncomeSync.Core.Shared.Contracts.Responses.TokenResponse;
-
-public readonly struct TokenResponse
+public record TokenResponse
 {
-    public string Token { get; init; }
+    public string Token { get; init; } = default!;
 }

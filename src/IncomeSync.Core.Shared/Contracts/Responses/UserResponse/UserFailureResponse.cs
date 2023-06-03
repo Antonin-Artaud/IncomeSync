@@ -5,5 +5,5 @@ namespace IncomeSync.Core.Shared.Contracts.Responses.UserResponse;
 public readonly struct UserFailureResponse
 {
     [Required(DisallowAllDefaultValues = true)]
-    public IEnumerable<string> Errors { get; init; }
+    public string Error { get; init; }
 }

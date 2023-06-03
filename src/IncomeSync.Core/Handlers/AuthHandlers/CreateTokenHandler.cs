@@ -1,38 +1,38 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using IncomeSync.Core.Providers.KeysProvider;
 using IncomeSync.Core.Shared.Contracts.Requests.TokenRequest;
 using IncomeSync.Core.Shared.Contracts.Responses.TokenResponse;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace IncomeSync.Core.Handlers.TokenHandler;
+namespace IncomeSync.Core.Handlers.AuthHandlers;
 
 public class CreateTokenHandler : IRequestHandler<CreateTokenRequest, TokenResponse>
 {
     private readonly IConfiguration _configuration;
     private readonly IMediator _mediator;
+    private readonly IPrivateKeyProvider _privateKeyProvider;
 
     private const string IssuerKey = "JwtSettings:Issuer";
     private const string AudienceKey = "JwtSettings:Audience";
-    private const string PrivateKeyFilePathKey = "JwtSettings:PrivateKeyFilePath";
 
-    public CreateTokenHandler(IConfiguration configuration, IMediator mediator)
+    public CreateTokenHandler(IConfiguration configuration, IMediator mediator, IPrivateKeyProvider privateKeyProvider)
     {
         _configuration = configuration;
         _mediator = mediator;
+        _privateKeyProvider = privateKeyProvider;
     }
-
+    
     public async Task<TokenResponse> Handle(CreateTokenRequest request, CancellationToken cancellationToken)
     {
         var issuer = GetConfigurationValue(IssuerKey);
         var audience = GetConfigurationValue(AudienceKey);
-        var privateKey = await ReadFileAsync(GetConfigurationValue(PrivateKeyFilePathKey));
+        var privateKey = await _privateKeyProvider.GetPrivateKey();
 
-        var ecdsa = ECDsa.Create();
-        ecdsa.ImportFromPem(privateKey);
-        var signingCredentials = new SigningCredentials(new ECDsaSecurityKey(ecdsa), SecurityAlgorithms.EcdsaSha512);
+        var signingCredentials = new SigningCredentials(new ECDsaSecurityKey(privateKey), SecurityAlgorithms.EcdsaSha512);
 
         var subject = new ClaimsIdentity(new[]
         {

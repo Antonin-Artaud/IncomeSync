@@ -1,51 +1,116 @@
 
 using IncomeSync.Core.Shared.Contracts.Requests.UserRequest;
 using IncomeSync.Core.Shared.Contracts.Responses.UserResponse;
+using IncomeSync.Core.Shared.Entities.UserEntity;
 using IncomeSync.Core.Shared.Exceptions.UserExceptions;
 using IncomeSync.Persistence.Repositories.UserRepository;
+using Microsoft.AspNetCore.Identity;
 
 namespace IncomeSync.Core.Services.UserService;
 
 public class UserService : IUserService
 {
+    private readonly PasswordHasher<UserEntity> _passwordHasher;
     private readonly IUserRepository _userRepository;
+
 
     public UserService(IUserRepository userRepository)
     {
+        _passwordHasher = new PasswordHasher<UserEntity>();
         _userRepository = userRepository;
     }
 
-    public async Task<UserResponse> CreateUserAsync(CreateUserRequest createUserRequest)
+    public async Task CreateUserAsync(CreateUserRequest request)
     {
-        var user = await _userRepository.FindUserByMailAsync(createUserRequest.Email);
+        var response = await _userRepository.FindUserByMailAsync(request.Email);
         
-        if (user is not null)
+        if (response is not null)
         {
-            throw new UserBaseAlreadyExistException("This email is already assigned to an user.");
+            throw new UserAlreadyExistException("This email is already assigned to an user.");
         }
+
+        var user = new UserEntity()
+        {
+            Id = Guid.NewGuid(),
+            Email = request.Email
+        };
         
-        return await _userRepository.InsertUserAsync(createUserRequest);
+        var passwordHash = _passwordHasher.HashPassword(user, request.Password);
+
+        user.PasswordHash = passwordHash;
+        
+        await _userRepository.InsertUserAsync(user);
     }
 
     public async Task<UserResponse?> GetUserByIdAsync(Guid createUserRequest)
     {
-        var user = await _userRepository.FindUserByIdAsync(createUserRequest);
+        var response = await _userRepository.FindUserByIdAsync(createUserRequest);
         
-        if (user is not null)
+        if (response is null)
         {
-            throw new UserBaseAlreadyExistException("This email is already assigned to an user.");
+            return null;
         }
-
-        return user;
+        
+        return new UserResponse
+        {
+            Id = response.Id,
+            Email = response.Email
+        };
     }
 
     public async Task<UserResponse?> GetUserByEmailAsync(string email)
     {
-        return await _userRepository.FindUserByMailAsync(email);
+        var response = await _userRepository.FindUserByMailAsync(email);
+
+        if (response is null)
+        {
+            return null;
+        }
+        
+        return new UserResponse
+        {
+            Id = response.Id,
+            Email = response.Email
+        };
     }
 
-    public Task<UserDeleteResponse> DeleteUserByAsync(CreateUserRequest createUserRequest)
+    public async Task<UserResponse?> GetUserByCredentialsAsync(string email, string password)
     {
-        throw new NotImplementedException();
+        var response = await _userRepository.FindUserByMailAsync(email);
+
+        if (response is null)
+        {
+            throw new UserNotFoundException("This email is already assigned to an user.");
+        }
+        
+        var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(response, response.PasswordHash, password);
+        
+        if (passwordVerificationResult == PasswordVerificationResult.Failed)
+        {
+            throw new UserCredentialsException("The email or password is incorrect.");
+        }
+        
+        return new UserResponse
+        {
+            Id = response.Id,
+            Email = response.Email
+        };
+    }
+
+    public async Task<UserDeleteResponse> DeleteUserByAsync(CreateUserRequest request)
+    {
+        var response = await _userRepository.FindUserByMailAsync(request.Email);
+        
+        if (response is null)
+        {
+            throw new UserNotFoundException();
+        }
+
+        await _userRepository.DeleteUserByAsync(response!);
+
+        return new UserDeleteResponse()
+        {
+            Id = response.Id
+        };
     }
 }

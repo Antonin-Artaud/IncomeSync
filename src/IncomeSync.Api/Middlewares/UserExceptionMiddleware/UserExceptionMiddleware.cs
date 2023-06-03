@@ -23,17 +23,15 @@ public class UserExceptionMiddleware
         {
             ctx.Response.StatusCode = exception switch
             {
-                UserBaseAlreadyExistException => StatusCodes.Status409Conflict,
-                UserBaseNotFoundException => StatusCodes.Status404NotFound,
+                UserAlreadyExistException => StatusCodes.Status409Conflict,
+                UserNotFoundException => StatusCodes.Status404NotFound,
+                UserCredentialsException => StatusCodes.Status401Unauthorized,
                 _ => StatusCodes.Status500InternalServerError
             };
             
             var validationFailureResponse = new UserFailureResponse
             {
-                Errors = new []
-                {
-                    exception.Message
-                }
+                Error = exception.Message
             };
 
             await ctx.Response.WriteAsJsonAsync(validationFailureResponse);
